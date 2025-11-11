@@ -8,7 +8,8 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Toast from '@/components/ui/Toast'
 import { runLighthouse } from '@/lib/lighthouse'
-import { saveLighthouseResult, getLighthouseHistory, getAllLighthouseUrls, deleteLighthouseHistory, exportLighthouseToCSV } from '@/lib/storage'
+import { saveLighthouseResult, getLighthouseHistory, getAllLighthouseUrls, deleteLighthouseHistory } from '@/lib/storage'
+import { exportLighthouseToCSV } from '@/lib/csv'
 import { LighthouseResult, LighthouseHistory } from '@/types'
 import { format } from 'date-fns'
 
@@ -21,12 +22,14 @@ export default function LighthousePage() {
 
   useEffect(() => {
     loadAllUrls()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     if (selectedUrl) {
       loadHistory(selectedUrl)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUrl])
 
   const loadAllUrls = () => {
