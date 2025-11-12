@@ -51,7 +51,7 @@ export default function MetadataTable({
         <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
             <strong>Note:</strong> Some pages have missing metadata (likely due to CORS restrictions). 
-            You can click on any cell to manually edit the metadata, or use the "Retry Failed Extraction" button above.
+            You can click on any cell to manually edit the metadata, or use the &quot;Retry Failed Extraction&quot; button above.
           </p>
         </div>
       )}
