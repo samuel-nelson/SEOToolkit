@@ -4,9 +4,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import SitemapInput from '@/components/MetadataAnalyzer/SitemapInput'
 import MetadataTable from '@/components/MetadataAnalyzer/MetadataTable'
 import BulkEditPanel from '@/components/MetadataAnalyzer/BulkEditPanel'
+import SEOAnalyzer from '@/components/MetadataAnalyzer/SEOAnalyzer'
+import AIGenerator from '@/components/MetadataAnalyzer/AIGenerator'
 import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Toast from '@/components/ui/Toast'
+import Card from '@/components/ui/Card'
 import { parseSitemapFromUrl, parseSitemapFromFile } from '@/lib/sitemap'
 import { extractMetadataBatch } from '@/lib/metadata'
 import { exportMetadataToCSV, importMetadataFromCSV } from '@/lib/csv'
@@ -21,6 +24,7 @@ export default function MetadataAnalyzerPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [sessionId] = useState(() => `session-${Date.now()}`)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedRowForAI, setSelectedRowForAI] = useState<number | null>(null)
 
   useEffect(() => {
     // Try to load saved session
@@ -96,6 +100,10 @@ export default function MetadataAnalyzerPage() {
       const newSet = new Set(prev)
       if (newSet.has(index)) {
         newSet.delete(index)
+        // Close AI generator if this row was selected
+        if (selectedRowForAI === index) {
+          setSelectedRowForAI(null)
+        }
       } else {
         newSet.add(index)
       }
@@ -264,11 +272,45 @@ export default function MetadataAnalyzerPage() {
               />
             </div>
 
+            <SEOAnalyzer metadata={metadata} />
+
             <BulkEditPanel
               selectedCount={selectedRows.size}
               onBulkUpdate={handleBulkUpdate}
               onClearSelection={() => setSelectedRows(new Set())}
             />
+
+            {selectedRowForAI !== null && metadata[selectedRowForAI] && (
+              <AIGenerator
+                metadata={metadata[selectedRowForAI]}
+                onGenerated={(title, description) => {
+                  handleUpdateMetadata(selectedRowForAI, 'title', title)
+                  handleUpdateMetadata(selectedRowForAI, 'description', description)
+                  setSelectedRowForAI(null)
+                  showToast('AI-generated metadata applied successfully', 'success')
+                }}
+                onError={(error) => {
+                  showToast(error, 'error')
+                }}
+              />
+            )}
+
+            {selectedRows.size === 1 && selectedRowForAI === null && (
+              <Card>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Generate AI-optimized metadata for the selected page
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedRowForAI(Array.from(selectedRows)[0])}
+                  >
+                    Generate with AI
+                  </Button>
+                </div>
+              </Card>
+            )}
 
             <MetadataTable
               metadata={metadata}

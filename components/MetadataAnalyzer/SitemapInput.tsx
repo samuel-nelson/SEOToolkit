@@ -75,6 +75,23 @@ export default function SitemapInput({ onUrlsExtracted, onError }: SitemapInputP
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Note: Some servers may block cross-origin requests. If URL loading fails, try uploading the sitemap file instead.
             </p>
+            <details className="mt-2 text-xs">
+              <summary className="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline">
+                CORS Workaround Options
+              </summary>
+              <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                <p className="font-medium text-gray-700 dark:text-gray-300">To bypass CORS restrictions:</p>
+                <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
+                  <li><strong>Browser Extension:</strong> Install a CORS unblocker extension (e.g., &quot;CORS Unblock&quot; or &quot;Allow CORS&quot;)</li>
+                  <li><strong>Upload File:</strong> Download the sitemap.xml file and upload it directly (recommended)</li>
+                  <li><strong>Same Domain:</strong> If testing your own site, access the tool from the same domain</li>
+                  <li><strong>Browser DevTools:</strong> Use browser developer tools to fetch and save the sitemap, then upload</li>
+                </ul>
+                <p className="text-gray-500 dark:text-gray-500 italic mt-2">
+                  Note: CORS is a browser security feature. For metadata extraction, you can manually edit fields if automatic extraction fails.
+                </p>
+              </div>
+            </details>
           </div>
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Load from URL'}

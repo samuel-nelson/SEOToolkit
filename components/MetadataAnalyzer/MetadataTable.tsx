@@ -129,8 +129,19 @@ export default function MetadataTable({
                       className="w-full px-2 py-1 border rounded"
                     />
                   ) : (
-                    <div className={`truncate max-w-xs ${!item.title ? 'text-gray-400 italic' : ''}`}>
-                      {item.title || <span className="text-gray-400">(empty - click to edit)</span>}
+                    <div>
+                      <div className={`truncate max-w-xs ${!item.title ? 'text-gray-400 italic' : ''}`}>
+                        {item.title || <span className="text-gray-400">(empty - click to edit)</span>}
+                      </div>
+                      {item.title && (
+                        <div className={`text-xs mt-1 ${
+                          item.title.length >= 30 && item.title.length <= 60 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : 'text-yellow-600 dark:text-yellow-400'
+                        }`}>
+                          {item.title.length} chars {item.title.length < 30 || item.title.length > 60 ? '(30-60 recommended)' : '✓'}
+                        </div>
+                      )}
                     </div>
                   )}
                 </td>
@@ -152,8 +163,19 @@ export default function MetadataTable({
                       rows={2}
                     />
                   ) : (
-                    <div className={`truncate max-w-xs ${!item.description || item.description.includes('[CORS Error') ? 'text-gray-400 italic' : ''}`}>
-                      {item.description || <span className="text-gray-400">(empty - click to edit)</span>}
+                    <div>
+                      <div className={`truncate max-w-xs ${!item.description || item.description.includes('[CORS Error') ? 'text-gray-400 italic' : ''}`}>
+                        {item.description || <span className="text-gray-400">(empty - click to edit)</span>}
+                      </div>
+                      {item.description && !item.description.includes('[CORS Error') && (
+                        <div className={`text-xs mt-1 ${
+                          item.description.length >= 120 && item.description.length <= 160 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : 'text-yellow-600 dark:text-yellow-400'
+                        }`}>
+                          {item.description.length} chars {item.description.length < 120 || item.description.length > 160 ? '(120-160 recommended)' : '✓'}
+                        </div>
+                      )}
                     </div>
                   )}
                 </td>
