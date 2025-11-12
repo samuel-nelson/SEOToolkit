@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import SitemapInput from '@/components/MetadataAnalyzer/SitemapInput'
 import MetadataTable from '@/components/MetadataAnalyzer/MetadataTable'
 import BulkEditPanel from '@/components/MetadataAnalyzer/BulkEditPanel'
@@ -20,6 +20,7 @@ export default function MetadataAnalyzerPage() {
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [sessionId] = useState(() => `session-${Date.now()}`)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Try to load saved session
@@ -169,17 +170,19 @@ export default function MetadataAnalyzerPage() {
           <>
             <div className="flex gap-2 flex-wrap">
               <Button onClick={handleExportCSV}>Export CSV</Button>
-              <label className="cursor-pointer">
-                <Button variant="secondary" as="span">
-                  Import CSV
-                </Button>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleImportCSV}
-                  className="hidden"
-                />
-              </label>
+              <Button 
+                variant="secondary" 
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Import CSV
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleImportCSV}
+                className="hidden"
+              />
             </div>
 
             <BulkEditPanel
