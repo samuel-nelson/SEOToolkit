@@ -8,6 +8,17 @@ export interface SEOAnalysis {
     title: { current: number; recommended: { min: number; max: number } }
     description: { current: number; recommended: { min: number; max: number } }
   }
+  categoryScores: {
+    onPage: number
+    technical: number
+    content: number
+    social: number
+  }
+  priorityIssues: Array<{
+    priority: 'high' | 'medium' | 'low'
+    issue: string
+    category: string
+  }>
 }
 
 export function analyzeSEO(metadata: PageMetadata): SEOAnalysis {
@@ -76,6 +87,65 @@ export function analyzeSEO(metadata: PageMetadata): SEOAnalysis {
     score -= 5
   }
 
+  // Calculate category-based scores
+  let onPageScore = 100
+  let technicalScore = 100
+  let contentScore = 100
+  let socialScore = 100
+  
+  // On-Page scoring
+  if (titleLength === 0) onPageScore -= 25
+  else if (titleLength < 30 || titleLength > 60) onPageScore -= 10
+  
+  if (descLength === 0) onPageScore -= 25
+  else if (descLength < 120 || descLength > 160) onPageScore -= 10
+  
+  if (!h1) onPageScore -= 15
+  
+  // Technical scoring
+  if (!canonical) technicalScore -= 20
+  
+  // Content scoring
+  // Would need full page content for accurate scoring
+  
+  // Social scoring
+  if (!ogTitle) socialScore -= 15
+  if (!ogDescription) socialScore -= 15
+  if (!ogImage) socialScore -= 10
+  
+  // Create priority issues list
+  const priorityIssues: SEOAnalysis['priorityIssues'] = []
+  
+  if (titleLength === 0) {
+    priorityIssues.push({ priority: 'high', issue: 'Missing title tag', category: 'on-page' })
+  } else if (titleLength < 30 || titleLength > 60) {
+    priorityIssues.push({ priority: 'high', issue: `Title length is ${titleLength < 30 ? 'too short' : 'too long'}`, category: 'on-page' })
+  }
+  
+  if (descLength === 0) {
+    priorityIssues.push({ priority: 'high', issue: 'Missing meta description', category: 'on-page' })
+  } else if (descLength < 120 || descLength > 160) {
+    priorityIssues.push({ priority: 'high', issue: `Description length is ${descLength < 120 ? 'too short' : 'too long'}`, category: 'on-page' })
+  }
+  
+  if (!h1) {
+    priorityIssues.push({ priority: 'high', issue: 'Missing H1 tag', category: 'on-page' })
+  }
+  
+  if (!canonical) {
+    priorityIssues.push({ priority: 'high', issue: 'Missing canonical URL', category: 'technical' })
+  }
+  
+  if (!ogTitle || !ogDescription || !ogImage) {
+    priorityIssues.push({ priority: 'medium', issue: 'Missing Open Graph tags', category: 'social' })
+  }
+  
+  // Sort by priority
+  priorityIssues.sort((a, b) => {
+    const priorityOrder = { high: 0, medium: 1, low: 2 }
+    return priorityOrder[a.priority] - priorityOrder[b.priority]
+  })
+  
   return {
     score: Math.max(0, score),
     issues,
@@ -89,7 +159,14 @@ export function analyzeSEO(metadata: PageMetadata): SEOAnalysis {
         current: descLength,
         recommended: { min: 120, max: 160 }
       }
-    }
+    },
+    categoryScores: {
+      onPage: Math.max(0, onPageScore),
+      technical: Math.max(0, technicalScore),
+      content: Math.max(0, contentScore),
+      social: Math.max(0, socialScore)
+    },
+    priorityIssues
   }
 }
 

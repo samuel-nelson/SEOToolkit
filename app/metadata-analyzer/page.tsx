@@ -6,10 +6,16 @@ import MetadataTable from '@/components/MetadataAnalyzer/MetadataTable'
 import BulkEditPanel from '@/components/MetadataAnalyzer/BulkEditPanel'
 import SEOAnalyzer from '@/components/MetadataAnalyzer/SEOAnalyzer'
 import AIGenerator from '@/components/MetadataAnalyzer/AIGenerator'
+import KeywordAnalyzer from '@/components/MetadataAnalyzer/KeywordAnalyzer'
+import ContentQuality from '@/components/MetadataAnalyzer/ContentQuality'
+import TechnicalSEO from '@/components/MetadataAnalyzer/TechnicalSEO'
+import SEOChecklist from '@/components/MetadataAnalyzer/SEOChecklist'
+import BulkOptimizer from '@/components/MetadataAnalyzer/BulkOptimizer'
 import Button from '@/components/ui/Button'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Toast from '@/components/ui/Toast'
 import Card from '@/components/ui/Card'
+import { generateSEOReport, downloadReport } from '@/lib/report-generator'
 import { parseSitemapFromUrl, parseSitemapFromFile } from '@/lib/sitemap'
 import { extractMetadataBatch } from '@/lib/metadata'
 import { exportMetadataToCSV, importMetadataFromCSV } from '@/lib/csv'
@@ -25,6 +31,7 @@ export default function MetadataAnalyzerPage() {
   const [sessionId] = useState(() => `session-${Date.now()}`)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedRowForAI, setSelectedRowForAI] = useState<number | null>(null)
+  const [viewMode, setViewMode] = useState<'table' | 'analysis'>('table')
 
   useEffect(() => {
     // Try to load saved session
@@ -254,15 +261,41 @@ export default function MetadataAnalyzerPage() {
               >
                 Import CSV
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const report = generateSEOReport(metadata)
+                  downloadReport(report, 'html')
+                  showToast('SEO report downloaded', 'success')
+                }}
+              >
+                Export SEO Report
+              </Button>
               {metadata.some(m => !m.title && !m.description) && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleRetryFailed}
                   disabled={isExtracting}
                 >
                   Retry Failed Extraction
                 </Button>
               )}
+              <div className="flex gap-2 ml-auto">
+                <Button
+                  variant={viewMode === 'table' ? 'primary' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                >
+                  Table View
+                </Button>
+                <Button
+                  variant={viewMode === 'analysis' ? 'primary' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('analysis')}
+                >
+                  Analysis View
+                </Button>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -273,6 +306,23 @@ export default function MetadataAnalyzerPage() {
             </div>
 
             <SEOAnalyzer metadata={metadata} />
+
+            {viewMode === 'analysis' && selectedRows.size > 0 && (
+              <BulkOptimizer
+                metadata={metadata}
+                selectedIndices={Array.from(selectedRows)}
+                onUpdate={(updates) => {
+                  setMetadata((prev) => {
+                    const updated = [...prev]
+                    updates.forEach((partial, idx) => {
+                      updated[idx] = { ...updated[idx], ...partial }
+                    })
+                    return updated
+                  })
+                  showToast(`Updated ${updates.size} page(s)`, 'success')
+                }}
+              />
+            )}
 
             <BulkEditPanel
               selectedCount={selectedRows.size}
@@ -319,6 +369,33 @@ export default function MetadataAnalyzerPage() {
               onSelectRow={handleSelectRow}
               onSelectAll={handleSelectAll}
             />
+
+            {viewMode === 'analysis' && (
+              <div className="space-y-6 mt-6">
+                {selectedRows.size === 1 && metadata[Array.from(selectedRows)[0]] && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <KeywordAnalyzer metadata={metadata[Array.from(selectedRows)[0]]} />
+                    <ContentQuality metadata={metadata[Array.from(selectedRows)[0]]} />
+                    <TechnicalSEO metadata={metadata[Array.from(selectedRows)[0]]} />
+                    <SEOChecklist metadata={metadata[Array.from(selectedRows)[0]]} />
+                  </div>
+                )}
+                {selectedRows.size === 0 && (
+                  <Card>
+                    <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                      Select a page from the table above to view detailed SEO analysis
+                    </p>
+                  </Card>
+                )}
+                {selectedRows.size > 1 && (
+                  <Card>
+                    <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                      Select a single page to view detailed analysis, or use bulk optimizer above for multiple pages
+                    </p>
+                  </Card>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

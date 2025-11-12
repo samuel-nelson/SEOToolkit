@@ -21,7 +21,7 @@ export default function AIGenerator({ metadata, onGenerated, onError }: AIGenera
 
   // Load API key from localStorage if available
   React.useEffect(() => {
-    const saved = localStorage.getItem('openai-api-key')
+    const saved = localStorage.getItem('grok-api-key')
     if (saved) {
       setApiKey(saved)
       setShowApiKey(true)
@@ -30,14 +30,14 @@ export default function AIGenerator({ metadata, onGenerated, onError }: AIGenera
 
   const handleGenerate = async () => {
     if (!apiKey.trim()) {
-      onError('Please enter your OpenAI API key')
+      onError('Please enter your Grok API key')
       return
     }
 
     setIsGenerating(true)
     try {
       // Save API key to localStorage
-      localStorage.setItem('openai-api-key', apiKey)
+      localStorage.setItem('grok-api-key', apiKey)
 
       const result = await generateMetadataWithAI({
         apiKey: apiKey.trim(),
@@ -61,7 +61,7 @@ export default function AIGenerator({ metadata, onGenerated, onError }: AIGenera
       <div className="space-y-4">
         <div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Generate optimized titles and descriptions using OpenAI. Your API key is stored locally in your browser.
+            Generate optimized titles and descriptions using Grok AI. Your API key is stored locally in your browser.
           </p>
           
           {!showApiKey && (
@@ -70,16 +70,16 @@ export default function AIGenerator({ metadata, onGenerated, onError }: AIGenera
               size="sm"
               onClick={() => setShowApiKey(true)}
             >
-              {apiKey ? 'Change API Key' : 'Add OpenAI API Key'}
+              {apiKey ? 'Change API Key' : 'Add Grok API Key'}
             </Button>
           )}
 
           {showApiKey && (
             <div className="space-y-2">
               <Input
-                label="OpenAI API Key"
+                label="Grok API Key"
                 type="password"
-                placeholder="sk-..."
+                placeholder="xai-..."
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 disabled={isGenerating}
@@ -87,12 +87,12 @@ export default function AIGenerator({ metadata, onGenerated, onError }: AIGenera
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Get your API key from{' '}
                 <a
-                  href="https://platform.openai.com/api-keys"
+                  href="https://x.ai/api"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  platform.openai.com
+                  x.ai/api
                 </a>
               </p>
             </div>

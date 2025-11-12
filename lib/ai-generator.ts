@@ -1,4 +1,4 @@
-// AI-powered metadata generation using OpenAI API
+// AI-powered metadata generation using Grok API (X.AI)
 
 export interface AIGenerationOptions {
   apiKey: string
@@ -19,7 +19,7 @@ export async function generateMetadataWithAI(options: AIGenerationOptions): Prom
   const { apiKey, url, currentTitle, currentDescription, h1, keywords } = options
 
   if (!apiKey) {
-    throw new Error('OpenAI API key is required')
+    throw new Error('Grok API key is required')
   }
 
   // Extract domain and path for context
@@ -50,14 +50,14 @@ Return a JSON object with this structure:
 }`
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'grok-beta',
         messages: [
           {
             role: 'system',
