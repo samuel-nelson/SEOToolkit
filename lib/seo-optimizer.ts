@@ -100,18 +100,18 @@ export function analyzeSEO(metadata: PageMetadata): SEOAnalysis {
   if (descLength === 0) onPageScore -= 25
   else if (descLength < 120 || descLength > 160) onPageScore -= 10
   
-  if (!h1) onPageScore -= 15
+  if (!metadata.h1 || metadata.h1.length === 0) onPageScore -= 15
   
   // Technical scoring
-  if (!canonical) technicalScore -= 20
+  if (!metadata.canonical) technicalScore -= 20
   
   // Content scoring
   // Would need full page content for accurate scoring
   
   // Social scoring
-  if (!ogTitle) socialScore -= 15
-  if (!ogDescription) socialScore -= 15
-  if (!ogImage) socialScore -= 10
+  if (!metadata.ogTitle) socialScore -= 15
+  if (!metadata.ogDescription) socialScore -= 15
+  if (!metadata.ogImage) socialScore -= 10
   
   // Create priority issues list
   const priorityIssues: SEOAnalysis['priorityIssues'] = []
@@ -128,15 +128,15 @@ export function analyzeSEO(metadata: PageMetadata): SEOAnalysis {
     priorityIssues.push({ priority: 'high', issue: `Description length is ${descLength < 120 ? 'too short' : 'too long'}`, category: 'on-page' })
   }
   
-  if (!h1) {
+  if (!metadata.h1 || metadata.h1.length === 0) {
     priorityIssues.push({ priority: 'high', issue: 'Missing H1 tag', category: 'on-page' })
   }
   
-  if (!canonical) {
+  if (!metadata.canonical) {
     priorityIssues.push({ priority: 'high', issue: 'Missing canonical URL', category: 'technical' })
   }
   
-  if (!ogTitle || !ogDescription || !ogImage) {
+  if (!metadata.ogTitle || !metadata.ogDescription || !metadata.ogImage) {
     priorityIssues.push({ priority: 'medium', issue: 'Missing Open Graph tags', category: 'social' })
   }
   
