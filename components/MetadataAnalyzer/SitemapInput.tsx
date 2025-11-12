@@ -54,14 +54,19 @@ export default function SitemapInput({ onUrlsExtracted, onError }: SitemapInputP
     <Card title="Sitemap Input">
       <div className="space-y-4">
         <form onSubmit={handleUrlSubmit} className="space-y-4">
-          <Input
-            label="Sitemap URL"
-            type="url"
-            placeholder="https://example.com/sitemap.xml"
-            value={sitemapUrl}
-            onChange={(e) => setSitemapUrl(e.target.value)}
-            disabled={isLoading}
-          />
+          <div>
+            <Input
+              label="Sitemap URL"
+              type="url"
+              placeholder="https://example.com/sitemap.xml"
+              value={sitemapUrl}
+              onChange={(e) => setSitemapUrl(e.target.value)}
+              disabled={isLoading}
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Note: Some servers may block cross-origin requests. If URL loading fails, try uploading the sitemap file instead.
+            </p>
+          </div>
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Load from URL'}
           </Button>
