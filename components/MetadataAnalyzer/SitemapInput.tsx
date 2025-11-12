@@ -15,6 +15,7 @@ interface SitemapInputProps {
 export default function SitemapInput({ onUrlsExtracted, onError }: SitemapInputProps) {
   const [sitemapUrl, setSitemapUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [corsError, setCorsError] = useState(false)
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,11 +25,17 @@ export default function SitemapInput({ onUrlsExtracted, onError }: SitemapInputP
     }
 
     setIsLoading(true)
+    setCorsError(false)
     try {
       const urls = await parseSitemapFromUrl(sitemapUrl.trim())
       onUrlsExtracted(urls)
+      setCorsError(false)
     } catch (error) {
-      onError(error instanceof Error ? error.message : 'Failed to parse sitemap')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to parse sitemap'
+      if (errorMessage.includes('CORS')) {
+        setCorsError(true)
+      }
+      onError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -39,9 +46,11 @@ export default function SitemapInput({ onUrlsExtracted, onError }: SitemapInputP
     if (!file) return
 
     setIsLoading(true)
+    setCorsError(false)
     try {
       const urls = await parseSitemapFromFile(file)
       onUrlsExtracted(urls)
+      setCorsError(false)
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Failed to parse sitemap file')
     } finally {
@@ -81,16 +90,28 @@ export default function SitemapInput({ onUrlsExtracted, onError }: SitemapInputP
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className={corsError ? 'p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg' : ''}>
+          <label className={`block text-sm font-medium mb-2 ${corsError ? 'text-yellow-800 dark:text-yellow-200' : 'text-gray-700 dark:text-gray-300'}`}>
             Upload Sitemap File
+            {corsError && (
+              <span className="ml-2 text-xs font-normal">(Recommended when URL fails due to CORS)</span>
+            )}
           </label>
+          {corsError && (
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2">
+              💡 Tip: Download the sitemap.xml file from the server, then upload it here to bypass CORS restrictions.
+            </p>
+          )}
           <input
             type="file"
             accept=".xml"
             onChange={handleFileUpload}
             disabled={isLoading}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-300"
+            className={`block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${
+              corsError 
+                ? 'file:bg-yellow-100 file:text-yellow-800 hover:file:bg-yellow-200 dark:file:bg-yellow-800 dark:file:text-yellow-100' 
+                : 'file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-300'
+            }`}
           />
         </div>
       </div>
