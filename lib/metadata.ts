@@ -63,19 +63,27 @@ export async function extractMetadata(url: string): Promise<PageMetadata> {
   }
 }
 
-export async function extractMetadataBatch(urls: string[], onProgress?: (current: number, total: number) => void): Promise<PageMetadata[]> {
+export async function extractMetadataBatch(
+  urls: string[], 
+  onProgress?: (current: number, total: number, success: number, failed: number) => void
+): Promise<PageMetadata[]> {
   const results: PageMetadata[] = []
+  let successCount = 0
+  let failedCount = 0
   
   for (let i = 0; i < urls.length; i++) {
     try {
       const metadata = await extractMetadata(urls[i])
       results.push(metadata)
+      successCount++
     } catch (error) {
       // Create a partial metadata object with error info
+      // Store error message in a comment or note field for debugging
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       results.push({
         url: urls[i],
         title: '',
-        description: '',
+        description: errorMessage.includes('CORS') ? '[CORS Error - Unable to fetch]' : '[Error - Unable to fetch]',
         ogTitle: '',
         ogDescription: '',
         ogImage: '',
@@ -87,10 +95,11 @@ export async function extractMetadataBatch(urls: string[], onProgress?: (current
         h1: '',
         keywords: '',
       })
+      failedCount++
     }
     
     if (onProgress) {
-      onProgress(i + 1, urls.length)
+      onProgress(i + 1, urls.length, successCount, failedCount)
     }
     
     // Small delay to avoid overwhelming servers

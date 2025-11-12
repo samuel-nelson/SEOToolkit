@@ -17,7 +17,7 @@ export default function MetadataAnalyzerPage() {
   const [metadata, setMetadata] = useState<PageMetadata[]>([])
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
   const [isExtracting, setIsExtracting] = useState(false)
-  const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 })
+  const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0, success: 0, failed: 0 })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [sessionId] = useState(() => `session-${Date.now()}`)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -50,21 +50,32 @@ export default function MetadataAnalyzerPage() {
 
     showToast(`Found ${urls.length} URLs. Starting metadata extraction...`, 'info')
     setIsExtracting(true)
-    setExtractionProgress({ current: 0, total: urls.length })
+    setExtractionProgress({ current: 0, total: urls.length, success: 0, failed: 0 })
 
     try {
       const urlList = urls.map((u) => u.loc)
-      const extracted = await extractMetadataBatch(urlList, (current, total) => {
-        setExtractionProgress({ current, total })
+      const extracted = await extractMetadataBatch(urlList, (current, total, success, failed) => {
+        setExtractionProgress({ current, total, success, failed })
       })
 
       setMetadata(extracted)
-      showToast(`Successfully extracted metadata from ${extracted.length} pages`, 'success')
+      
+      const successCount = extracted.filter(m => m.title || m.description).length
+      const failedCount = extracted.length - successCount
+      
+      if (failedCount > 0) {
+        showToast(
+          `Extracted metadata from ${successCount} pages. ${failedCount} pages failed (likely due to CORS). You can manually edit the metadata.`, 
+          failedCount === extracted.length ? 'error' : 'info'
+        )
+      } else {
+        showToast(`Successfully extracted metadata from ${successCount} pages`, 'success')
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to extract metadata', 'error')
     } finally {
       setIsExtracting(false)
-      setExtractionProgress({ current: 0, total: 0 })
+      setExtractionProgress({ current: 0, total: 0, success: 0, failed: 0 })
     }
   }
 
@@ -154,13 +165,18 @@ export default function MetadataAnalyzerPage() {
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
             <div className="flex items-center gap-4">
               <LoadingSpinner />
-              <div>
+              <div className="flex-1">
                 <p className="text-gray-900 dark:text-gray-100 font-medium">
                   Extracting metadata...
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {extractionProgress.current} of {extractionProgress.total} pages
                 </p>
+                {extractionProgress.success > 0 || extractionProgress.failed > 0 ? (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    ✓ {extractionProgress.success} succeeded • ✗ {extractionProgress.failed} failed
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
