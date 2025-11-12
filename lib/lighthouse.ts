@@ -8,11 +8,29 @@ export async function runLighthouse(url: string): Promise<LighthouseResult> {
   const recommendations: string[] = []
   
   try {
+    // Validate URL
+    try {
+      new URL(url)
+    } catch {
+      throw new Error('Invalid URL format')
+    }
+
     // Fetch the page
-    const response = await fetch(url, { 
-      mode: 'cors',
-      cache: 'no-cache',
-    })
+    let response: Response
+    try {
+      response = await fetch(url, { 
+        mode: 'cors',
+        cache: 'no-cache',
+        headers: {
+          'Accept': 'text/html',
+        },
+      })
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('CORS error: Unable to fetch the page. The server may not allow cross-origin requests. Try using a browser extension or testing on a page from the same domain.')
+      }
+      throw error
+    }
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)

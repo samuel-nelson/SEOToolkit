@@ -147,6 +147,60 @@ export default function MetadataAnalyzerPage() {
     }
   }
 
+  const handleRetryFailed = async () => {
+    const failedUrls = metadata
+      .map((m, index) => ({ url: m.url, index, isEmpty: !m.title && !m.description && !m.h1 }))
+      .filter(item => item.isEmpty)
+      .map(item => item.url)
+
+    if (failedUrls.length === 0) {
+      showToast('No failed extractions to retry', 'info')
+      return
+    }
+
+    showToast(`Retrying metadata extraction for ${failedUrls.length} pages...`, 'info')
+    setIsExtracting(true)
+    setExtractionProgress({ current: 0, total: failedUrls.length, success: 0, failed: 0 })
+
+    try {
+      const extracted = await extractMetadataBatch(failedUrls, (current, total, success, failed) => {
+        setExtractionProgress({ current, total, success, failed })
+      })
+
+      // Update only the failed entries
+      setMetadata((prev) => {
+        const updated = [...prev]
+        let extractedIndex = 0
+        updated.forEach((item, index) => {
+          if (!item.title && !item.description && !item.h1) {
+            if (extractedIndex < extracted.length) {
+              updated[index] = extracted[extractedIndex]
+              extractedIndex++
+            }
+          }
+        })
+        return updated
+      })
+
+      const successCount = extracted.filter(m => m.title || m.description).length
+      const failedCount = extracted.length - successCount
+
+      if (failedCount > 0) {
+        showToast(
+          `Retried: ${successCount} succeeded, ${failedCount} still failed. You can manually edit the metadata.`,
+          failedCount === extracted.length ? 'error' : 'info'
+        )
+      } else {
+        showToast(`Successfully extracted metadata from ${successCount} pages`, 'success')
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to retry extraction', 'error')
+    } finally {
+      setIsExtracting(false)
+      setExtractionProgress({ current: 0, total: 0, success: 0, failed: 0 })
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -184,7 +238,7 @@ export default function MetadataAnalyzerPage() {
 
         {metadata.length > 0 && (
           <>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap items-center">
               <Button onClick={handleExportCSV}>Export CSV</Button>
               <Button 
                 variant="secondary" 
@@ -192,6 +246,15 @@ export default function MetadataAnalyzerPage() {
               >
                 Import CSV
               </Button>
+              {metadata.some(m => !m.title && !m.description) && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetryFailed}
+                  disabled={isExtracting}
+                >
+                  Retry Failed Extraction
+                </Button>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"

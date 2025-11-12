@@ -43,8 +43,18 @@ export default function MetadataTable({
     )
   }
 
+  const hasEmptyMetadata = metadata.some(m => !m.title && !m.description && !m.h1)
+
   return (
     <Card title={`Metadata (${metadata.length} pages)`}>
+      {hasEmptyMetadata && (
+        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            <strong>Note:</strong> Some pages have missing metadata (likely due to CORS restrictions). 
+            You can click on any cell to manually edit the metadata, or use the "Retry Failed Extraction" button above.
+          </p>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
@@ -119,7 +129,9 @@ export default function MetadataTable({
                       className="w-full px-2 py-1 border rounded"
                     />
                   ) : (
-                    <div className="truncate max-w-xs">{item.title || '-'}</div>
+                    <div className={`truncate max-w-xs ${!item.title ? 'text-gray-400 italic' : ''}`}>
+                      {item.title || <span className="text-gray-400">(empty - click to edit)</span>}
+                    </div>
                   )}
                 </td>
                 <td
@@ -140,7 +152,9 @@ export default function MetadataTable({
                       rows={2}
                     />
                   ) : (
-                    <div className="truncate max-w-xs">{item.description || '-'}</div>
+                    <div className={`truncate max-w-xs ${!item.description || item.description.includes('[CORS Error') ? 'text-gray-400 italic' : ''}`}>
+                      {item.description || <span className="text-gray-400">(empty - click to edit)</span>}
+                    </div>
                   )}
                 </td>
                 <td
